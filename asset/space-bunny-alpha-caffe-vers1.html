@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070a09">
+  <title>Nespresso — Classic 3D Collection</title>
+
+  <style>
+    :root {
+      --green: #007d59;
+      --green-dark: #006247;
+      --ivory: #f7f5ef;
+      --ink: #14201b;
+
+      --card-width: clamp(205px, 21vw, 268px);
+      --card-height: 452px;
+      --radius: clamp(270px, 30vw, 410px);
+      --ring-width: clamp(430px, 82vw, 1040px);
+      --ring-height: clamp(230px, 38vw, 460px);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-width: 320px;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      color: #f5f2e9;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(
+          ellipse at 50% 20%,
+          #303a35 0%,
+          #18201d 30%,
+          #0a0e0c 65%,
+          #020303 100%
+        );
+    }
+
+    button {
+      font: inherit;
+    }
+
+    button:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 2px solid #b9e6d3;
+      outline-offset: 5px;
+    }
+
+    .ambient {
+      position: fixed;
+      inset: -20%;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 12% 24%, rgba(117, 154, 132, 0.2), transparent 24%),
+        radial-gradient(circle at 87% 38%, rgba(171, 112, 70, 0.12), transparent 26%),
+        conic-gradient(
+          from 125deg at 50% 48%,
+          transparent,
+          rgba(255, 255, 255, 0.04),
+          transparent,
+          rgba(0, 132, 94, 0.07),
+          transparent
+        );
+      filter: blur(42px);
+      animation: ambient-shift 14s ease-in-out infinite alternate;
+    }
+
+    .ambient::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.28;
+      background:
+        repeating-linear-gradient(
+          116deg,
+          transparent 0 5px,
+          rgba(255, 255, 255, 0.018) 6px,
+          transparent 7px 12px
+        ),
+        repeating-radial-gradient(
+          ellipse at 18% 42%,
+          transparent 0 25px,
+          rgba(255, 255, 255, 0.022) 26px,
+          transparent 27px 52px
+        );
+    }
+
+    @keyframes ambient-shift {
+      from {
+        transform: translate3d(-2%, -1%, 0) rotate(-2deg);
+      }
+      to {
+        transform: translate3d(3%, 2%, 0) rotate(3deg);
+      }
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      width: min(1320px, 100%);
+      margin: 0 auto;
+      padding: 30px 28px 28px;
+    }
+
+    .masthead {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 8px;
+      color: #b7c4bd;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before,
+    .eyebrow::after {
+      content: "";
+      width: 24px;
+      height: 1px;
+      background: rgba(219, 236, 227, 0.35);
+    }
+
+    .masthead h1 {
+      margin: 0;
+      color: #fbf8ef;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(3.5rem, 7vw, 5.25rem);
+      font-weight: 500;
+      line-height: 0.95;
+      letter-spacing: -0.055em;
+      text-shadow: 0 15px 45px rgba(0, 0, 0, 0.4);
+    }
+
+    .intro {
+      max-width: 540px;
+      margin: 13px auto 0;
+      color: #aebbb4;
+      font-size: 13px;
+      line-height: 1.6;
+      text-wrap: balance;
+    }
+
+    .collection-meta {
+      position: absolute;
+      bottom: 7px;
+      display: grid;
+      gap: 5px;
+      color: #7e8e86;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-align: left;
+      text-transform: uppercase;
+    }
+
+    .collection-meta strong {
+      color: #e0e5e1;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .collection-meta--left {
+      left: 0;
+    }
+
+    .collection-meta--right {
+      right: 0;
+      text-align: right;
+    }
+
+    /*
+      The stage acts as a virtual camera. "perspective" creates depth,
+      while "preserve-3d" lets the carousel and its cards share one
+      three-dimensional rendering context.
+    */
+    .stage {
+      position: relative;
+      z-index: 2;
+      height: 550px;
+      margin-top: -12px;
+      perspective: 1250px;
+      perspective-origin: 50% 44%;
+      transform-style: preserve-3d;
+      cursor: grab;
+      touch-action: pan-y;
+      user-select: none;
+    }
+
+    .stage.is-dragging {
+      cursor: grabbing;
+    }
+
+    .stage:focus-visible {
+      border-radius: 42px;
+      outline: 1px solid rgba(185, 230, 211, 0.35);
+      outline-offset: 3px;
+    }
+
+    .stage-vignette {
+      position: absolute;
+      inset: 6% 2% 0;
+      pointer-events: none;
+      background:
+        radial-gradient(
+          ellipse at 50% 50%,
+          transparent 20%,
+          rgba(0, 0, 0, 0.08) 58%,
+          rgba(0, 0, 0, 0.46) 100%
+        );
+    }
+
+    .orbit {
+      position: absolute;
+      top: 70%;
+      left: 50%;
+      pointer-events: none;
+      border: 1px solid rgba(188, 223, 205, 0.13);
+      border-radius: 50%;
+      transform-style: preserve-3d;
+    }
+
+    .orbit--outer {
+      width: var(--ring-width);
+      height: var(--ring-height);
+      background:
+        radial-gradient(
+          ellipse,
+          rgba(70, 119, 94, 0.08),
+          transparent 62%
+        );
+      box-shadow:
+        0 0 70px rgba(75, 132, 103, 0.07),
+        inset 0 0 55px rgba(255, 255, 255, 0.018);
+      transform:
+        translate(-50%, -50%)
+        rotateX(72deg)
+        translateZ(-210px);
+      animation: orbit-pulse 5s ease-in-out infinite;
+    }
+
+    .orbit--inner {
+      width: calc(var(--ring-width) - 90px);
+      height: calc(var(--ring-height) - 70px);
+      border-color: rgba(208, 231, 219, 0.08);
+      transform:
+        translate(-50%, -50%)
+        rotateX(72deg)
+        translateZ(-205px);
+    }
+
+    @keyframes orbit-pulse {
+      0%,
+      100% {
+        opacity: 0.62;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+
+    .carousel {
+      position: absolute;
+      top: 49%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      transform-style: preserve-3d;
+      transform:
+        rotateX(var(--tilt-x, -4deg))
+        rotateY(var(--rotation, 0deg));
+      transition: transform 800ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      will-change: transform;
+    }
+
+    .carousel.is-dragging {
+      transition: none;
+    }
+
+    /*
+      Each card is rotated around the Y axis and pushed away by the
+      radius with translateZ, creating a real cylindrical arrangement.
+    */
+    .capsule-card {
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: flex;
+      width: var(--card-width);
+      height: var(--card-height);
+      padding: 22px 20px 19px;
+      overflow: visible;
+      color: var(--ink);
+      border: 1px solid rgba(255, 255, 255, 0.82);
+      border-radius: 25px;
+      background:
+        radial-gradient(
+          circle at 50% 0%,
+          var(--aura),
+          transparent 38%
+        ),
+        linear-gradient(155deg, #ffffff 0%, #faf9f4 57%, #f0f0eb 100%);
+      box-shadow:
+        0 45px 75px rgba(0, 0, 0, 0.45),
+        0 10px 0 #c8ceca,
+        0 12px 0 #aeb6b0,
+        0 18px 28px rgba(0, 0, 0, 0.22),
+        inset 0 1px 0 #ffffff;
+      transform:
+        translate(-50%, -50%)
+        rotateY(var(--angle))
+        translateZ(var(--radius));
+      transform-origin: center;
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transition:
+        transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 420ms ease,
+        border-color 420ms ease;
+      will-change: transform;
+    }
+
+    .capsule-card::before {
+      content: "";
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      width: 170px;
+      height: 190px;
+      pointer-events: none;
+      background: radial-gradient(circle, var(--aura), transparent 70%);
+      opacity: 0.65;
+      transform: translateX(-50%) translateZ(-10px);
+      transition: opacity 400ms ease;
+    }
+
+    /*
+      Hovering moves the card toward the camera, along its local Z axis,
+      and adds a small Y-axis lift plus a soft dimensional shadow.
+    */
+    .capsule-card:hover {
+      z-index: 5;
+      border-color: rgba(255, 255, 255, 0.98);
+      transform:
+        translate(-50%, -50%)
+        rotateY(var(--angle))
+        translateZ(calc(var(--radius) + 38px))
+        translateY(-7px)
+        scale(1.025);
+      box-shadow:
+        0 58px 90px rgba(0, 0, 0, 0.52),
+        0 10px 0 #c8ceca,
+        0 12px 0 #aeb6b0,
+        0 20px 34px rgba(0, 0, 0, 0.3),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.95);
+    }
+
+    .capsule-card:hover::before {
+      opacity: 1;
+    }
+
+    .capsule-art {
+      position: relative;
+      flex: 0 0 132px;
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 132px;
+      transform-style: preserve-3d;
+      transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .capsule-art::before {
+      content: "";
+      position: absolute;
+      width: 148px;
+      height: 148px;
+      border: 1px solid rgba(74, 91, 82, 0.09);
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--aura), transparent 69%);
+      transform: translateZ(0);
+    }
+
+    .capsule-card:hover .capsule-art {
+      transform: translateY(-5px);
+    }
+
+    .art-shadow {
+      position: absolute;
+      bottom: 3px;
+      left: 50%;
+      width: 92px;
+      height: 17px;
+      pointer-events: none;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(0, 0, 0, 0.27), transparent 68%);
+      filter: blur(5px);
+      transform: translateX(-50%) translateZ(0);
+      transition:
+        width 420ms ease,
+        opacity 420ms ease;
+    }
+
+    .capsule-card:hover .art-shadow {
+      width: 104px;
+      opacity: 0.8;
+    }
+
+    .profile-number {
+      position: absolute;
+      top: 1px;
+      right: 4px;
+      color: rgba(33, 48, 40, 0.34);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+    }
+
+    .capsule-photo,
+    .capsule-fallback {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      transform-origin: center;
+    }
+
+    .capsule-photo {
+      z-index: 2;
+      object-fit: cover;
+      pointer-events: none;
+      border: 4px solid rgba(255, 255, 255, 0.92);
+      box-shadow:
+        0 17px 25px rgba(20, 27, 24, 0.25),
+        0 5px 8px rgba(0, 0, 0, 0.16),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+      transform:
+        translateX(-50%)
+        translateZ(28px)
+        rotateX(5deg)
+        rotateZ(-3deg);
+      transition:
+        transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        filter 420ms ease,
+        opacity 200ms ease;
+    }
+
+    .capsule-card:hover .capsule-photo {
+      filter: brightness(1.08) saturate(1.04);
+      transform:
+        translateX(-50%)
+        translateZ(38px)
+        rotateX(3deg)
+        rotateZ(1deg)
+        scale(1.055);
+    }
+
+    .capsule-fallback {
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: rgba(255, 255, 255, 0.88);
+      border: 4px solid rgba(255, 255, 255, 0.88);
+      background:
+        radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.45), transparent 18%),
+        repeating-radial-gradient(
+          circle,
+          transparent 0 10px,
+          rgba(255, 255, 255, 0.16) 11px,
+          transparent 12px
+        ),
+        linear-gradient(
+          135deg,
+          var(--foil-light),
+          var(--foil) 48%,
+          #101311 100%
+        );
+      box-shadow:
+        0 17px 25px rgba(20, 27, 24, 0.27),
+        inset 0 0 0 2px rgba(0, 0, 0, 0.22),
+        inset 0 0 18px rgba(255, 255, 255, 0.14);
+      opacity: 0;
+      transform:
+        translateX(-50%)
+        translateZ(18px)
+        rotateX(5deg)
+        rotateZ(-3deg);
+      transition:
+        opacity 220ms ease,
+        transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .capsule-fallback::after {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      border-radius: 50%;
+    }
+
+    .capsule-fallback span {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 3px;
+      font-size: 7px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-align: center;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+    }
+
+    .capsule-fallback small {
+      font-size: 5px;
+      letter-spacing: 0.18em;
+    }
+
+    .capsule-art.using-fallback .capsule-fallback {
+      opacity: 1;
+    }
+
+    .capsule-art.using-fallback .capsule-photo {
+      opacity: 0;
+    }
+
+    .product-copy {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .product-copy h2 {
+      min-height: 43px;
+      margin: 0;
+      color: #17231d;
+      font-size: clamp(17px, 1.45vw, 20px);
+      font-weight: 750;
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+      text-wrap: balance;
+    }
+
+    .profile {
+      min-height: 27px;
+      margin: 7px 0 0;
+      color: #7d6455;
+      font-size: 9px;
+      font-weight: 750;
+      line-height: 1.4;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .intensity {
+      margin-top: 14px;
+    }
+
+    .intensity-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 7px;
+      color: #8a928d;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .intensity-label strong {
+      color: #526159;
+      font-weight: 800;
+    }
+
+    .intensity-track {
+      position: relative;
+      width: 100%;
+      height: 4px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: #dfe3df;
+    }
+
+    .intensity-track span {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: var(--fill);
+      border-radius: inherit;
+      background: var(--green);
+      box-shadow: 0 0 8px rgba(0, 125, 89, 0.28);
+    }
+
+    .card-footer {
+      margin-top: auto;
+      padding-top: 13px;
+      border-top: 1px solid #e1e3df;
+    }
+
+    .price-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 36px;
+      margin-bottom: 9px;
+    }
+
+    .price {
+      display: grid;
+      gap: 3px;
+    }
+
+    .price strong {
+      color: #365047;
+      font-size: 16px;
+      font-weight: 750;
+    }
+
+    .price small {
+      color: #8d9690;
+      font-size: 8px;
+      font-weight: 650;
+    }
+
+    .capsule-quantity {
+      display: grid;
+      place-items: center;
+      width: 31px;
+      height: 31px;
+      color: #567066;
+      border: 1px solid #d6ddd8;
+      border-radius: 50%;
+      font-size: 9px;
+      font-weight: 800;
+    }
+
+    .add-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      width: 100%;
+      min-height: 39px;
+      padding: 8px 14px;
+      color: #ffffff;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #078662, var(--green));
+      box-shadow:
+        0 8px 16px rgba(0, 105, 72, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22);
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      transition:
+        transform 200ms ease,
+        background 200ms ease,
+        box-shadow 200ms ease;
+    }
+
+    .add-button:hover {
+      background: linear-gradient(180deg, #0a906b, var(--green-dark));
+      box-shadow:
+        0 11px 20px rgba(0, 105, 72, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .add-button:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .add-button svg {
+      width: 15px;
+      height: 15px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 200ms ease;
+    }
+
+    .add-button:hover svg {
+      transform: translateX(3px);
+    }
+
+    .add-button.is-added {
+      background: linear-gradient(180deg, #15936f, #007554);
+    }
+
+    .best-seller {
+      position: absolute;
+      top: 13px;
+      left: 17px;
+      z-index: 3;
+      padding: 5px 8px;
+      color: #ffffff;
+      border-radius: 4px;
+      background: #836141;
+      box-shadow: 0 4px 10px rgba(79, 52, 33, 0.18);
+      font-size: 6px;
+      font-weight: 850;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .controls {
+      position: relative;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: 52px minmax(250px, 380px) 52px;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-top: -2px;
+    }
+
+    .nav-button {
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      color: #eaf2ed;
+      border: 1px solid rgba(223, 238, 230, 0.17);
+      border-radius: 50%;
+      background: rgba(18, 25, 22, 0.72);
+      box-shadow:
+        0 12px 25px rgba(0, 0, 0, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(14px);
+      cursor: pointer;
+      transition:
+        transform 220ms ease,
+        border-color 220ms ease,
+        background 220ms ease;
+    }
+
+    .nav-button:hover {
+      border-color: rgba(203, 235, 219, 0.42);
+      background: rgba(27, 39, 33, 0.9);
+      transform: translateY(-2px);
+    }
+
+    .nav-button:active {
+      transform: translateY(0) scale(0.96);
+    }
+
+    .nav-button svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .carousel-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 17px;
+      min-height: 45px;
+      padding: 0 16px;
+      border: 1px solid rgba(223, 238, 230, 0.1);
+      border-radius: 999px;
+      background: rgba(8, 13, 10, 0.38);
+      backdrop-filter: blur(12px);
+    }
+
+    .carousel-status {
+      min-width: 48px;
+      color: #77867f;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+    }
+
+    #current-number {
+      color: #eef4f0;
+    }
+
+    .dots {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .dot {
+      position: relative;
+      width: 6px;
+      height: 6px;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: #55635c;
+      cursor: pointer;
+      transition:
+        width 260ms ease,
+        background 260ms ease,
+        transform 260ms ease;
+    }
+
+    .dot:hover {
+      background: #a9b9b0;
+      transform: scale(1.2);
+    }
+
+    .dot[aria-current="true"] {
+      width: 24px;
+      background: #7ed0ad;
+      box-shadow: 0 0 12px rgba(74, 194, 144, 0.25);
+    }
+
+    .interaction-hint {
+      margin: 10px 0 0;
+      color: #65736c;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
+    @media (max-width: 700px) {
+      :root {
+        --card-width: 194px;
+        --card-height: 438px;
+        --radius: 260px;
+      }
+
+      .page {
+        padding: 22px 14px 24px;
+      }
+
+      .collection-meta {
+        display: none;
+      }
+
+      .masthead h1 {
+        font-size: clamp(3.25rem, 16vw, 4.6rem);
+      }
+
+      .intro {
+        max-width: 360px;
+        padding: 0 8px;
+        font-size: 12px;
+      }
+
+      .stage {
+        height: 515px;
+        margin-top: -8px;
+      }
+
+      .orbit {
+        top: 72%;
+      }
+
+      .capsule-card {
+        padding: 19px 17px 17px;
+        border-radius: 22px;
+      }
+
+      .capsule-art {
+        flex-basis: 123px;
+        height: 123px;
+      }
+
+      .capsule-photo,
+      .capsule-fallback {
+        top: 8px;
+        width: 101px;
+        height: 101px;
+      }
+
+      .product-copy h2 {
+        min-height: 47px;
+        font-size: 17px;
+      }
+
+      .profile {
+        min-height: 29px;
+        font-size: 8px;
+      }
+
+      .intensity {
+        margin-top: 10px;
+      }
+
+      .card-footer {
+        padding-top: 10px;
+      }
+
+      .price-row {
+        min-height: 33px;
+        margin-bottom: 7px;
+      }
+
+      .price strong {
+        font-size: 15px;
+      }
+
+      .add-button {
+        min-height: 37px;
+        font-size: 9px;
+      }
+
+      .controls {
+        grid-template-columns: 45px minmax(0, 1fr) 45px;
+        gap: 9px;
+      }
+
+      .nav-button {
+        width: 45px;
+        height: 45px;
+      }
+
+      .carousel-nav {
+        gap: 9px;
+        min-width: 0;
+        padding: 0 10px;
+      }
+
+      .carousel-status {
+        min-width: 41px;
+        font-size: 9px;
+      }
+
+      .dots {
+        gap: 4px;
+      }
+
+      .dot {
+        width: 5px;
+        height: 5px;
+      }
+
+      .dot[aria-current="true"] {
+        width: 18px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      :root {
+        --card-width: 184px;
+        --card-height: 430px;
+        --radius: 238px;
+      }
+
+      .eyebrow {
+        font-size: 8px;
+      }
+
+      .eyebrow::before,
+      .eyebrow::after {
+        width: 16px;
+      }
+
+      .stage {
+        height: 505px;
+      }
+
+      .controls {
+        grid-template-columns: 42px minmax(0, 1fr) 42px;
+        gap: 6px;
+      }
+
+      .nav-button {
+        width: 42px;
+        height: 42px;
+      }
+
+      .carousel-nav {
+        gap: 7px;
+        padding: 0 7px;
+      }
+
+      .dots {
+        gap: 3px;
+      }
+    }
+
+    @media (max-height: 760px) and (min-width: 701px) {
+      :root {
+        --card-height: 420px;
+      }
+
+      .page {
+        padding-top: 20px;
+      }
+
+      .masthead h1 {
+        font-size: 4.25rem;
+      }
+
+      .intro {
+        margin-top: 8px;
+      }
+
+      .stage {
+        height: 495px;
+      }
+
+      .capsule-art {
+        flex-basis: 112px;
+        height: 112px;
+      }
+
+      .capsule-photo,
+      .capsule-fallback {
+        top: 4px;
+        width: 98px;
+        height: 98px;
+      }
+
+      .product-copy h2 {
+        font-size: 18px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+
+  <main class="page">
+    <header class="masthead">
+      <p class="eyebrow">The capsule collection</p>
+      <h1>Classic</h1>
+      <p class="intro">
+        Otto profili iconici, disposi su un carosello circolare e esplorati
+        in una scena tridimensionale.
+      </p>
+
+      <div class="collection-meta collection-meta--left" aria-hidden="true">
+        <span>Formato</span>
+        <strong>50 capsule</strong>
+      </div>
+
+      <div class="collection-meta collection-meta--right" aria-hidden="true">
+        <span>Selezione</span>
+        <strong>08 profili</strong>
+      </div>
+    </header>
+
+    <section
+      class="stage"
+      id="stage"
+      tabindex="0"
+      role="region"
+      aria-roledescription="carosello 3D"
+      aria-label="Collezione Nespresso Classic"
+      aria-describedby="carousel-help"
+    >
+      <p class="sr-only" id="carousel-help">
+        Trascina orizzontalmente oppure usa i pulsanti e le frecce della tastiera
+        per ruotare il carosello.
+      </p>
+
+      <div class="stage-vignette" aria-hidden="true"></div>
+      <div class="orbit orbit--outer" aria-hidden="true"></div>
+      <div class="orbit orbit--inner" aria-hidden="true"></div>
+
+      <div class="carousel" id="carousel">
+        <!-- Replace capsula1.png–capsula8.png with the actual product images. -->
+
+        <article
+          class="capsule-card is-active"
+          data-name="Ristretto Intenso"
+          style="
+            --angle: 0deg;
+            --foil: #202523;
+            --foil-light: #68706c;
+            --aura: rgba(45, 54, 50, 0.24);
+          "
+          aria-hidden="false"
+        >
+          <div class="capsule-art">
+            <span class="profile-number">01</span>
+            <div class="art-shadow" aria-hidden="true"></div>
+            <div class="capsule-fallback" aria-hidden="true">
+              <span>NESPRESSO<small>CLASSIC</small></span>
+            </div>
+            <img
+              class="capsule-photo"
+              src="capsula1.png"
+              alt="Capsula Ristretto Intenso"
+              width="216"
+              height="216"
+              draggable="false"
+            >
+          </div>
+
+          <div class="product-copy">
+            <h2>Ristretto Intenso - Box 50 capsule</h2>
+            <p class="profile">Intensità e dolcezza</p>
+
+            <div class="intensity">
+              <div class="intensity-label">
+                <span>Intensità</span>
+                <strong>12 / 12</strong>
+              </div>
+              <div
+                class="intensity-track"
+                style="--fill: 100%;"
+                role="img"
+                aria-label="Intensità 12 su 12"
+              ><span></span></div>
+            </div>
+
+            <div class="card-footer">
+              <div class="price-row">
+                <div class="price">
+                  <strong>€ 0,57</strong>
+                  <small>1 Box (50 capsule)</small>
+                </div>
+                <span class="capsule-quantity">50</span>
+              </div>
+
+              <button class="add-button" type="button" tabindex="0">
+                <span>Aggiungi</span>
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M4 10h11M11 6l4 4-4 4"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article
+          class="capsule-card"
+          data-name="Ristretto"
+          aria-hidden="true"
+          style="
+            --angle: 45deg;
+            --foil: #737d7a;
+            --foil-light: #c0c8c5;
+            --aura: rgba(92, 105, 100, 0.25);
+          "
+        >
+          <div class="capsule-art">
+            <span class="profile-number">02</span>
+            <div class="art-shadow" aria-hidden="true"></div>
+            <div class="capsule-fallback" aria-hidden="true">
+              <span>NESPRESSO<small>CLASSIC</small></span>
+            </div>
+            <img
+              class="capsule-photo"
+              src="capsula2.png"
+              alt="Capsula Ristretto"
+              width="216"
+              height="216"
+              draggable="false"
+            >
+          </div>
+
+          <div class="product-copy">
+            <h2>Ristretto - Box 50 capsule</h2>
+            <p class="profile">Il grande classico</p>
+
+            <div class="intensity">
+              <div class="intensity-label">
+                <span>Intensità</span>
+                <strong>9 / 12</strong>
+              </div>
+              <div
+                class="intensity-track"
+                style="--fill: 75%;"
+                role="img"
+                aria-label="Intensità 9 su 12"
+              ><span></span></div>
+            </div>
+
+            <div class="card-footer">
+              <div class="price-row">
+                <div class="price">
+                  <strong>€ 0,57</strong>
+                  <small>1 Box (50 capsule)</small>
+                </div>
+                <span class="capsule-quantity">50</span>
+              </div>
+
+              <button class="add-button" type="button" tabindex="-1">
+                <span>Aggiungi</span>
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M4 10h11M11 6l4 4-4 4"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article
+          class="capsule-card"
+          data-name="Intenso"
+          aria-hidden="true"
+          style="
+            --angle: 90deg;
+            --foil: #5d3225;
+            --foil-light: #a06a4e;
+            --aura: rgba(128, 70, 45, 0.27);
+          "
+        >
+          <div class="capsule-art">
+            <span class="profile-number">03</span>
+            <div class="art-shadow" aria-hidden="true"></div>
+            <div class="capsule-fallback" aria-hidden="true">
+              <span>NESPRESSO<small>CLASSIC</small></span>
+            </div>
+            <img
+              class="capsule-photo"
+              src="capsula3.png"
+              alt="Capsula Intenso"
+              width="216"
+              height="216"
+              draggable="false"
+            >
+          </div>
+
+          <div class="product-copy">
+            <h2>Intenso - Box 50 capsule</h2>
+            <p class="profile">Intenso e tostato</p>
+
+            <div class="intensity">
+              <div class="intensity-label">
+                <span>Intensità</span>
+                <strong>8 / 12</strong>
+              </div>
+              <div
+                class="intensity-track"
+                style="--fill: 66.666%;"
+                role="img"
+                aria-label="Intensità 8 su 12"
+              ><span></span></div>
+            </div>
+
+            <div class="card-footer">
+              <div class="price-row">
+                <div class="price">
+                  <strong>€ 0,57</strong>
+                  <small>1 Box (50 capsule)</small>
+                </div>
+                <span class="capsule-quantity">50</span>
+              </div>
+
+              <button class="add-button" type="button" tabindex="-1">
+                <span>Aggiungi</span>
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M4 10h11M11 6l4 4-4 4"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article
+          class="capsule-card"
+          data-name="Decaffeinato"
+          aria-hidden="true"
+          style="
+            --angle: 135deg;
+            --foil: #b30e2c;
+            --foil-light: #ed5570;
+            --aura: rgba(205, 24, 62, 0.23);
+          "
+        >
+          <div class="capsule-art">
+            <span class="profile-number">04</span>
+            <div class="art-shadow" aria-hidden="true"></div>
+            <div class="capsule-fallback" aria-hidden="true">
+              <span>NESPRESSO<small>CLASSIC</small></span>
+            </div>
+            <img
+              class="capsule-photo"
+              src="capsula4.png"
+              alt="Capsula Decaffeinato"
+              width="216"
+              height="216"
+              draggable="false"
+            >
+          </div>
+
+          <div class="product-copy">
+            <h2>Decaffeinato - Box 50 capsule</h2>
+            <p class="profile">Corpo</p>
+
+            <div class="intensity">
+              <div class="intensity-label">
+                <span>Intensità</span>
+                <strong>7 / 12</strong>
+              </div>
+              <div
+                class="intensity-track"
+                style="--fill: 58.333%;"
+                role="img"
+                aria-label="Intensità 7 su 12"
+              ><span></span></div>
+            </div>
+
+            <div class="card-footer">
+              <div class="price-row">
+                <div class="price">
+                  <strong>€ 0,57</strong>
+                  <small>1 Box (50 capsule)</small>
+                </div>
+                <span class="capsule-quantity">50</span>
+              </div>
+
+              <button class="add-button" type="button" tabindex="-1">
+                <span>Aggiungi</span>
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M4 10h11M11 6l4 4-4 4"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article
+          class="capsule-card"
+          data-name="Forte"
+          aria-hidden="true"
+          style="
+            --angle: 180deg;
+            --foil: #8d4a2e;
+            --foil-light: #c98458;
+            --aura: rgba(163, 85, 45, 0.27);
+          "
+        >
+          <div class="capsule-art">
+            <span class="profile-number">05</span>
+            <div class="art-shadow" aria-hidden="true"></div>
+            <div class="capsule-fallback" aria-hidden="true">
+              <span>NESPRESSO<small>CLASSIC</small></span>
+            </div>
+            <img
+              class="capsule-photo"
+              src="capsula5.png"
+              alt="Capsula Forte"
+              width="216"
+              height="216"
+              draggable="false"
+            >
+          </div>
+
+          <div class="product-copy">
+            <h2>Forte - Box 50 capsule</h2>
+            <p class="profile">Intenso e dorato</p>
+
+            <div class="intensity">
+              <div class="intensity-label">
+                <span>Intensità</span>
+                <strong>11 / 12</strong>
+              </div>
+              <div
+                class="intensity-track"
+                style="--fill: 91.666%;"
+                role="img"
+                aria-label="Intensità 11 su 12"
+              ><span></span></div>
+            </div>
+
+            <div class="card-footer">
+              <div class="price-row">
+                <div class="price">
+                  <strong>€ 0,57</strong>
+                  <small>1 Box (50 capsule)</small>
+                </div>
+                <span class="capsule-quantity">50</span>
+              </div>
+
+              <button class="add-button" type="button" tabindex="-1">
+                <span>Aggiungi</span>
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M4 10h11M11 6l4 4-4 4"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article
+          class="capsule-card"
+          data-name="Leggero"
+          aria-hidden="true"
+          style="
+            --angle: 225deg;
+            --foil: #5d8d0b;
+            --foil-light: #a2c739;
+            --aura: rgba(101, 151, 16, 0.25);
+          "
+        >
+          <div class="capsule-art">
+            <span class="profile-number">06</span>
+            <div class="art-shadow" aria-hidden="true"></div>
+            <div class="capsule-fallback" aria-hidden="true">
+              <span>NESPRESSO<small>CLASSIC</small></span>
+            </div>
+            <img
+              class="capsule-photo"
+              src="capsula6.png"
+              alt="Capsula Leggero"
+              width="216"
+              height="216"
+              draggable="false"
+            >
+          </div>
+
+          <div class="product-copy">
+            <h2>Leggero - Box 50 capsule</h2>
+            <p class="profile">Profondità, serenità</p>
+
+            <div class="intensity">
+              <div class="intensity-label">
+                <span>Intensità</span>
+                <strong>6 / 12</strong>
+              </div>
+              <div
+                class="intensity-track"
+                style="--fill: 50%;"
+                role="img"
+                aria-label="Intensità 6 su 12"
+              ><span></span></div>
+            </div>
+
+            <div class="card-footer">
+              <div class="price-row">
+                <div class="price">
+                  <strong>€ 0,57</strong>
+                  <small>1 Box (50 capsule)</small>
+                </div>
+                <span class="capsule-quantity">50</span>
+              </div>
+
+              <button class="add-button" type="button" tabindex="-1">
+                <span>Aggiungi</span>
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M4 10h11M11 6l4 4-4 4"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article
+          class="capsule-card"
+          data-name="Finezzo"
+          aria-hidden="true"
+          style="
+            --angle: 270deg;
+            --foil: #88a90a;
+            --foil-light: #d0df39;
+            --aura: rgba(155, 183, 19, 0.26);
+          "
+        >
+          <div class="capsule-art">
+            <span class="profile-number">07</span>
+            <div class="art-shadow" aria-hidden="true"></div>
+            <div class="capsule-fallback" aria-hidden="true">
+              <span>NESPRESSO<small>CLASSIC</small></span>
+            </div>
+            <img
+              class="capsule-photo"
+              src="capsula7.png"
+              alt="Capsula Finezzo"
+              width="216"
+              height="216"
+              draggable="false"
+            >
+          </div>
+
+          <div class="product-copy">
+            <h2>Finezzo - Box 50 capsule</h2>
+            <p class="profile">Florale e rinascente</p>
+
+            <div class="intensity">
+              <div class="intensity-label">
+                <span>Intensità</span>
+                <strong>3 / 12</strong>
+              </div>
+              <div
+                class="intensity-track"
+                style="--fill: 25%;"
+                role="img"
+                aria-label="Intensità 3 su 12"
+              ><span></span></div>
+            </div>
+
+            <div class="card-footer">
+              <div class="price-row">
+                <div class="price">
+                  <strong>€ 0,57</strong>
+                  <small>1 Box (50 capsule)</small>
+                </div>
+                <span class="capsule-quantity">50</span>
+              </div>
+
+              <button class="add-button" type="button" tabindex="-1">
+                <span>Aggiungi</span>
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M4 10h11M11 6l4 4-4 4"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article
+          class="capsule-card"
+          data-name="Forte Extra"
+          aria-hidden="true"
+          style="
+            --angle: 315deg;
+            --foil: #74432e;
+            --foil-light: #b77b57;
+            --aura: rgba(150, 84, 53, 0.27);
+          "
+        >
+          <span class="best-seller">Best seller</span>
+
+          <div class="capsule-art">
+            <span class="profile-number">08</span>
+            <div class="art-shadow" aria-hidden="true"></div>
+            <div class="capsule-fallback" aria-hidden="true">
+              <span>NESPRESSO<small>CLASSIC</small></span>
+            </div>
+            <img
+              class="capsule-photo"
+              src="capsula8.png"
+              alt="Capsula Forte Extra"
+              width="216"
+              height="216"
+              draggable="false"
+            >
+          </div>
+
+          <div class="product-copy">
+            <h2>Forte Extra - Box 50 capsule</h2>
+            <p class="profile">Caramel Macchiato &amp; Cremissimo</p>
+
+            <div class="intensity">
+              <div class="intensity-label">
+                <span>Intensità</span>
+                <strong>8 / 12</strong>
+              </div>
+              <div
+                class="intensity-track"
+                style="--fill: 66.666%;"
+                role="img"
+                aria-label="Intensità 8 su 12"
+              ><span></span></div>
+            </div>
+
+            <div class="card-footer">
+              <div class="price-row">
+                <div class="price">
+                  <strong>€ 0,60</strong>
+                  <small>1 Box (50 capsule)</small>
+                </div>
+                <span class="capsule-quantity">50</span>
+              </div>
+
+              <button class="add-button" type="button" tabindex="-1">
+                <span>Aggiungi</span>
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M4 10h11M11 6l4 4-4 4"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <div class="controls" aria-label="Controlli del carosello">
+      <button class="nav-button" id="previous" type="button" aria-label="Capsula precedente">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 5l-7 7 7 7"></path>
+        </svg>
+      </button>
+
+      <div class="carousel-nav">
+        <div class="carousel-status" aria-hidden="true">
+          <span id="current-number">01</span> / 08
+        </div>
+
+        <div class="dots" aria-label="Seleziona una capsula">
+          <button class="dot" type="button" data-index="0" aria-label="Mostra Ristretto Intenso" aria-current="true"></button>
+          <button class="dot" type="button" data-index="1" aria-label="Mostra Ristretto"></button>
+          <button class="dot" type="button" data-index="2" aria-label="Mostra Intenso"></button>
+          <button class="dot" type="button" data-index="3" aria-label="Mostra Decaffeinato"></button>
+          <button class="dot" type="button" data-index="4" aria-label="Mostra Forte"></button>
+          <button class="dot" type="button" data-index="5" aria-label="Mostra Leggero"></button>
+          <button class="dot" type="button" data-index="6" aria-label="Mostra Finezzo"></button>
+          <button class="dot" type="button" data-index="7" aria-label="Mostra Forte Extra"></button>
+        </div>
+      </div>
+
+      <button class="nav-button" id="next" type="button" aria-label="Capsula successiva">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
+    </div>
+
+    <p class="interaction-hint">Trascina la scena · usa le frecce ← →</p>
+    <p class="sr-only" id="carousel-live" aria-live="polite" aria-atomic="true"></p>
+  </main>
+
+  <script>
+    (() => {
+      const stage = document.getElementById("stage");
+      const carousel = document.getElementById("carousel");
+      const cards = Array.from(carousel.querySelectorAll(".capsule-card"));
+      const dots = Array.from(document.querySelectorAll(".dot"));
+      const previousButton = document.getElementById("previous");
+      const nextButton = document.getElementById("next");
+      const currentNumber = document.getElementById("current-number");
+      const liveRegion = document.getElementById("carousel-live");
+
+      const step = 360 / cards.length;
+      const resetTimers = new WeakMap();
+
+      let rotation = 0;
+      let pitch = -4;
+      let current = null;
+
+      let dragging = false;
+      let moved = false;
+      let pointerId = null;
+      let startX = 0;
+      let startY = 0;
+      let startRotation = 0;
+
+      const modulo = (value, divisor) =>
+        ((value % divisor) + divisor) % divisor;
+
+      const clamp = (value, min, max) =>
+        Math.min(Math.max(value, min), max);
+
+      function applyRotation() {
+        carousel.style.setProperty("--rotation", `${rotation.toFixed(3)}deg`);
+        carousel.style.setProperty("--tilt-x", `${pitch.toFixed(2)}deg`);
+      }
+
+      function updateActiveCard(index) {
+        const nextIndex = modulo(index, cards.length);
+
+        if (nextIndex === current) return;
+
+        current = nextIndex;
+        currentNumber.textContent = String(current + 1).padStart(2, "0");
+
+        cards.forEach((card, cardIndex) => {
+          const isActive = cardIndex === current;
+          const addButton = card.querySelector(".add-button");
+
+          card.classList.toggle("is-active", isActive);
+          card.setAttribute("aria-hidden", String(!isActive));
+          addButton.tabIndex = isActive ? 0 : -1;
+        });
+
+        dots.forEach((dot, dotIndex) => {
+          if (dotIndex === current) {
+            dot.setAttribute("aria-current", "true");
+          } else {
+            dot.removeAttribute("aria-current");
+          }
+        });
+
+        liveRegion.textContent =
+          `${current + 1} di ${cards.length}: ${cards[current].dataset.name}`;
+      }
+
+      function goTo(index) {
+        const normalizedIndex = modulo(index, cards.length);
+        const baseRotation = -normalizedIndex * step;
+
+        let targetRotation = baseRotation;
+        let smallestDistance = Infinity;
+
+        // Select the equivalent full turn that produces the shortest rotation.
+        for (let turn = -2; turn <= 2; turn++) {
+          const candidate = baseRotation + turn * 360;
+          const distance = Math.abs(candidate - rotation);
+
+          if (distance < smallestDistance) {
+            smallestDistance = distance;
+            targetRotation = candidate;
+          }
+        }
+
+        rotation = targetRotation;
+        pitch = -4;
+
+        carousel.classList.remove("is-dragging");
+        stage.classList.remove("is-dragging");
+
+        applyRotation();
+        updateActiveCard(normalizedIndex);
+      }
+
+      function nearestCard(degrees) {
+        return modulo(Math.round(-degrees / step), cards.length);
+      }
+
+      previousButton.addEventListener("click", () => {
+        goTo(current - 1);
+      });
+
+      nextButton.addEventListener("click", () => {
+        goTo(current + 1);
+      });
+
+      dots.forEach((dot) => {
+        dot.addEventListener("click", () => {
+          goTo(Number(dot.dataset.index));
+        });
+      });
+
+      stage.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          goTo(current + 1);
+        } else if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          goTo(current - 1);
+        } else if (event.key === "Home") {
+          event.preventDefault();
+          goTo(0);
+        } else if (event.key === "End") {
+          event.preventDefault();
+          goTo(cards.length - 1);
+        }
+      });
+
+      /*
+        Horizontal dragging changes rotateY, while vertical movement
+        temporarily changes rotateX to reinforce the 3D camera illusion.
+      */
+      stage.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0 || event.target.closest(".add-button")) {
+          return;
+        }
+
+        dragging = true;
+        moved = false;
+        pointerId = event.pointerId;
+        startX = event.clientX;
+        startY = event.clientY;
+        startRotation = rotation;
+
+        stage.classList.add("is-dragging");
+        carousel.classList.add("is-dragging");
+        stage.focus({ preventScroll: true });
+        stage.setPointerCapture(pointerId);
+
+        event.preventDefault();
+      });
+
+      stage.addEventListener("pointermove", (event) => {
+        if (!dragging || event.pointerId !== pointerId) return;
+
+        const deltaX = event.clientX - startX;
+        const deltaY = event.clientY - startY;
+
+        if (Math.hypot(deltaX, deltaY) > 4) {
+          moved = true;
+        }
+
+        if (!moved) return;
+
+        event.preventDefault();
+
+        rotation = startRotation + deltaX * 0.42;
+        pitch = clamp(-4 - deltaY * 0.04, -10, 4);
+
+        applyRotation();
+        updateActiveCard(nearestCard(rotation));
+      });
+
+      function finishDrag(event) {
+        if (!dragging || event.pointerId !== pointerId) return;
+
+        if (moved) {
+          const targetStep = Math.round(-rotation / step);
+          rotation = -targetStep * step;
+          updateActiveCard(modulo(targetStep, cards.length));
+        }
+
+        dragging = false;
+        pitch = -4;
+
+        stage.classList.remove("is-dragging");
+        carousel.classList.remove("is-dragging");
+
+        if (stage.hasPointerCapture(pointerId)) {
+          stage.releasePointerCapture(pointerId);
+        }
+
+        pointerId = null;
+        applyRotation();
+      }
+
+      stage.addEventListener("pointerup", finishDrag);
+      stage.addEventListener("pointercancel", finishDrag);
+
+      cards.forEach((card, index) => {
+        const button = card.querySelector(".add-button");
+        const originalMarkup = button.innerHTML;
+
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+
+          if (current !== index) {
+            goTo(index);
+          }
+
+          clearTimeout(resetTimers.get(button));
+
+          button.classList.add("is-added");
+          button.textContent = "Aggiunto ✓";
+          button.setAttribute("aria-pressed", "true");
+
+          liveRegion.textContent =
+            `${card.dataset.name} aggiunto al carrello.`;
+
+          resetTimers.set(
+            button,
+            setTimeout(() => {
+              button.classList.remove("is-added");
+              button.innerHTML = originalMarkup;
+              button.setAttribute("aria-pressed", "false");
+            }, 1400)
+          );
+        });
+      });
+
+      // A CSS-built capsule is displayed if a placeholder image is unavailable.
+      document.querySelectorAll(".capsule-photo").forEach((image) => {
+        const art = image.closest(".capsule-art");
+
+        const showFallback = () => {
+          art.classList.add("using-fallback");
+          image.style.opacity = "0";
+        };
+
+        if (image.complete) {
+          if (image.naturalWidth === 0) showFallback();
+        } else {
+          image.addEventListener("error", showFallback, { once: true });
+        }
+      });
+
+      applyRotation();
+      updateActiveCard(0);
+    })();
+  </script>
+</body>
+</html>
