@@ -2742,15 +2742,18 @@
     const cupProfileName = document.getElementById("cupProfileName");
     const cupColorDot = document.getElementById("cupColorDot");
 
+    // Card della giostra -> profilo di partenza dell'Onboarding
+    const CARD_TO_PROFILE = ["imprese", "imprese", "produttori", "produttori", "cultura", "ospitalita", "imprese", "addetti"];
+
     function openOnboardingPortal() {
-      dismissSmokeExperience();
-      onboardingPortal.style.display = "block";
-      requestAnimationFrame(() => {
-        onboardingPortal.classList.add("is-visible");
-      });
-      renderProfileTabs();
-      selectProfile(0);
-      initHeroCup3D();
+      const profile = CARD_TO_PROFILE[((current % CARDS.length) + CARDS.length) % CARDS.length] || "imprese";
+      // il vapore si espande verso l'osservatore come transizione di camera verso la nuova pagina
+      smokeOverlay.style.transition = "opacity 520ms ease, transform 520ms cubic-bezier(0.55, 0, 0.2, 1)";
+      smokeOverlay.style.transform = "scale(1.18)";
+      smokeOverlay.style.opacity = "0";
+      setTimeout(() => {
+        window.location.href = "onboarding.html?profile=" + encodeURIComponent(profile) + "&from=gira-ora";
+      }, 480);
     }
 
     function closeOnboardingPortal() {

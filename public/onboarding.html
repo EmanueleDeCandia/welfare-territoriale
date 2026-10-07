@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#05070c">
+  <meta name="description" content="Onboarding all'ecosistema Welfare Territoriale: requisiti, vantaggi, FAQ e candidatura per imprese, addetti, produttori Km 0, ospitalità e cultura.">
+  <title>Onboarding — Il Nostro Welfare, Iscriviti con Noi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --accent: #3b82f6;
+      --accent-soft: rgba(59, 130, 246, 0.22);
+      --glass: linear-gradient(145deg, rgba(22, 36, 58, 0.78), rgba(9, 15, 27, 0.86));
+      --glass-border: rgba(205, 226, 255, 0.22);
+      --panel-w: clamp(320px, 27vw, 400px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { height: 100%; }
+
+    body {
+      color: #f8fafc;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: #05070c;
+      background-image:
+        radial-gradient(ellipse at 50% 0%, rgba(30, 58, 110, 0.35), transparent 60%),
+        linear-gradient(to bottom, rgba(5, 7, 12, 0.55), rgba(5, 8, 14, 0.92)),
+        url('background.jpg');
+      background-size: cover;
+      background-position: center top;
+      background-attachment: fixed;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    /* ---------- WebGL stage ---------- */
+    #stage3d {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+      cursor: grab;
+    }
+    #stage3d.is-dragging { cursor: grabbing; }
+    #stage3d.is-hovering { cursor: pointer; }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 45%, rgba(3, 5, 9, 0.7) 100%);
+    }
+
+    /* ---------- Layout ---------- */
+    .ui {
+      position: relative;
+      z-index: 2;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      padding: 16px 20px 18px;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      pointer-events: auto;
+    }
+
+    .nav-group { display: flex; gap: 10px; }
+
+    .glass-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.07);
+      color: #fff;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+      transition: background-color 160ms ease, transform 160ms ease, border-color 160ms ease;
+    }
+    .glass-btn:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.45); transform: translateY(-1px); }
+    .glass-btn:focus-visible, .tab:focus-visible, .submit:focus-visible { outline: 3px solid rgba(147, 197, 253, 0.95); outline-offset: 3px; }
+
+    .brand { text-align: center; flex: 1 1 280px; }
+    .eyebrow {
+      display: inline-block;
+      font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+      padding: 3px 11px; border-radius: 999px; margin-bottom: 4px;
+      transition: color 400ms ease, background 400ms ease;
+    }
+    h1 {
+      font-size: clamp(1.15rem, 2.2vw, 1.65rem);
+      font-weight: 800; letter-spacing: -0.02em; color: #fff;
+    }
+    h1 span { background: linear-gradient(90deg, #93c5fd, var(--accent), #c4b5fd); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .compliance {
+      font-size: 11px; font-weight: 700; color: #a7f3d0;
+      background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.32);
+      padding: 6px 14px; border-radius: 999px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      pointer-events: auto;
+    }
+    .tab {
+      display: flex; align-items: center; gap: 9px;
+      padding: 9px 12px; border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(10, 16, 28, 0.62);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      color: #94a3b8; font-family: inherit; text-align: left; cursor: pointer;
+      transition: all 220ms ease;
+    }
+    .tab:hover { color: #fff; border-color: rgba(255, 255, 255, 0.28); }
+    .tab .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); flex-shrink: 0; }
+    .tab b { display: block; font-size: 12px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tab small { display: block; font-size: 10px; color: #8ea0b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tab.is-active {
+      background: linear-gradient(135deg, rgba(28, 48, 82, 0.9), rgba(12, 20, 36, 0.95));
+      border-color: var(--c); color: #fff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 0 22px color-mix(in srgb, var(--c) 40%, transparent);
+    }
+
+    /* Panels grid */
+    .grid {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: var(--panel-w) minmax(0, 1fr) var(--panel-w);
+      gap: 18px;
+    }
+
+    .panel {
+      pointer-events: auto;
+      min-height: 0;
+      overflow-y: auto;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 18px 40px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      display: flex; flex-direction: column; gap: 14px;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;
+    }
+
+    .center-caption {
+      align-self: start; justify-self: center;
+      pointer-events: none; text-align: center;
+      padding-top: 2px;
+    }
+    .center-caption .role {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 7px 16px; border-radius: 999px;
+      background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.16);
+      font-size: 13px; font-weight: 800;
+    }
+    .center-caption .role i { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+    .center-caption p { font-size: 11px; color: #94a3b8; margin-top: 6px; }
+
+    .section-title {
+      font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #fff;
+      padding-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .section-title em { font-style: normal; color: var(--accent); font-size: 10.5px; }
+
+    .tagline { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
+
+    ul.reqs { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    ul.reqs li {
+      display: flex; gap: 10px; align-items: flex-start;
+      background: rgba(255, 255, 255, 0.045); border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px; padding: 9px 11px; font-size: 12px; color: #d4deec;
+    }
+    ul.reqs svg { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 1px; color: #34d399; }
+
+    .benefit {
+      background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, transparent), rgba(15, 28, 50, 0.4));
+      border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
+      border-radius: 14px; padding: 12px 14px; font-size: 12px; color: #e2e8f0;
+    }
+    .benefit strong { display: block; color: var(--accent); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 3px; filter: brightness(1.4); }
+
+    details {
+      border: 1px solid rgba(255, 255, 255, 0.09); border-radius: 12px;
+      background: rgba(0, 0, 0, 0.26); overflow: hidden;
+    }
+    summary {
+      list-style: none; cursor: pointer; padding: 10px 12px;
+      font-size: 12px; font-weight: 700; color: #fff;
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: '+'; color: var(--accent); font-size: 16px; line-height: 1; transition: transform 200ms ease; }
+    details[open] summary::after { transform: rotate(45deg); }
+    details p { padding: 0 12px 11px; font-size: 11.5px; color: #9fb0c7; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 9px; }
+
+    /* Calculator */
+    .calc {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
+      border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 16px; padding: 14px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .calc-head { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #93c5fd; }
+    .calc-head b { color: var(--accent); filter: brightness(1.3); }
+    .slider-row label { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 600; color: #cbd5e1; margin-bottom: 4px; }
+    input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+    .results { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .pill { background: rgba(0, 0, 0, 0.36); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 8px 10px; }
+    .pill span { display: block; font-size: 9.5px; font-weight: 600; color: #8ea0b8; text-transform: uppercase; letter-spacing: 0.04em; }
+    .pill strong { display: block; font-size: 13.5px; font-weight: 800; color: var(--accent); filter: brightness(1.35); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+
+    /* Form */
+    form { display: flex; flex-direction: column; gap: 9px; }
+    .field label { display: block; font-size: 10.5px; font-weight: 700; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+    .field input, .field textarea {
+      width: 100%; padding: 9px 12px; border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.16); background: rgba(10, 16, 28, 0.65);
+      color: #fff; font-family: inherit; font-size: 12.5px; outline: none;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+    .field input:focus, .field textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .field textarea { resize: vertical; min-height: 50px; }
+    .consent { display: flex; gap: 8px; align-items: flex-start; font-size: 11px; color: #94a3b8; }
+    .consent input { margin-top: 2px; accent-color: var(--accent); }
+    .submit {
+      padding: 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.4);
+      background: linear-gradient(135deg, var(--accent), #1e3a8a);
+      color: #fff; font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 10px 24px color-mix(in srgb, var(--accent) 35%, transparent);
+      transition: transform 160ms ease, filter 160ms ease;
+    }
+    .submit:hover { transform: translateY(-2px); filter: brightness(1.15); }
+
+    /* Modal */
+    .modal { position: fixed; inset: 0; z-index: 50; display: none; place-items: center; background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(8px); padding: 20px; }
+    .modal.is-open { display: grid; }
+    .modal-card { max-width: 460px; width: 100%; text-align: center; padding: 28px; border-radius: 24px; background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7); }
+    .modal-card .tick { width: 54px; height: 54px; border-radius: 50%; margin: 0 auto 14px; display: grid; place-items: center; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.45); color: #34d399; }
+    .modal-card h2 { font-size: 18px; margin-bottom: 8px; }
+    .modal-card p { font-size: 13px; color: #cbd5e1; margin-bottom: 18px; }
+
+    /* Intro curtain */
+    .curtain { position: fixed; inset: 0; z-index: 60; pointer-events: none; background: radial-gradient(circle at 50% 62%, rgba(224, 242, 254, 0.95), rgba(96, 165, 250, 0.55) 30%, rgba(5, 7, 12, 1) 70%); opacity: 1; transition: opacity 1400ms cubic-bezier(0.16, 1, 0.3, 1); }
+    .curtain.is-gone { opacity: 0; }
+
+    .ui > * { opacity: 0; transform: translateY(14px); transition: opacity 900ms ease, transform 900ms cubic-bezier(0.16, 1, 0.3, 1); }
+    body.is-ready .ui > * { opacity: 1; transform: none; }
+    body.is-ready .ui > *:nth-child(2) { transition-delay: 120ms; }
+    body.is-ready .ui > *:nth-child(3) { transition-delay: 240ms; }
+
+    .webgl-fallback { display: none; position: fixed; inset: 0; z-index: 0; align-items: center; justify-content: center; font-size: 14px; color: #94a3b8; }
+    body.no-webgl .webgl-fallback { display: flex; }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+      body { overflow-y: auto; }
+      .ui { height: auto; min-height: 100vh; grid-template-rows: auto auto auto; }
+      .tabs { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+      .grid { grid-template-columns: 1fr; }
+      .center-caption { order: -1; height: 46vh; display: grid; align-items: start; }
+      .panel { overflow: visible; }
+      .compliance { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="stage3d" aria-label="Scena 3D interattiva: tazzina di caffè. Trascina per ruotare, clicca sulle tazzine in basso per cambiare profilo."></canvas>
+  <div class="vignette"></div>
+  <div class="webgl-fallback">Il rendering 3D non è disponibile su questo dispositivo: le informazioni di accreditamento restano pienamente consultabili.</div>
+  <div class="curtain" id="curtain"></div>
+
+  <main class="ui">
+    <header class="topbar">
+      <div class="nav-group">
+        <button type="button" class="glass-btn" id="backCards" aria-label="Torna alle 8 Card 3D">‹ 8 Vantaggi 3D</button>
+        <button type="button" class="glass-btn" id="backSim" aria-label="Torna al Simulatore">‹ Simulatore</button>
+      </div>
+      <div class="brand">
+        <span class="eyebrow" id="eyebrow">Accreditamento Partecipanti</span>
+        <h1>Il Nostro Welfare — <span>Iscriviti con Noi</span></h1>
+      </div>
+      <div class="compliance">Art. 51 TUIR · CAM · CSRD · Scope 3 GHG</div>
+    </header>
+
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Profilo di partecipazione"></nav>
+
+    <section class="grid">
+      <aside class="panel" id="leftPanel" aria-live="polite"></aside>
+      <div class="center-caption">
+        <div class="role"><i></i><span id="roleName">Grandi Imprese &amp; HR</span></div>
+        <p>Trascina per ruotare · clicca le tazzine per cambiare profilo</p>
+      </div>
+      <aside class="panel" id="rightPanel"></aside>
+    </section>
+  </main>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="tick"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <h2 id="modalTitle">Candidatura registrata</h2>
+      <p id="modalText"></p>
+      <button type="button" class="glass-btn" id="modalClose" style="margin:0 auto">Chiudi</button>
+    </div>
+  </div>
+
+  <script src="js/three.min.js"></script>
+  <script>
+    /* =====================================================================
+       DATI DI PROFILO — allineati ai parametri di default del Simulatore
+       (150 imprese x 30 addetti, hotel 16% / food 25%, voucher 50/25 EUR,
+        Km 0: 20% x 6 ordini x 30 EUR, 50 km evitati, 0,19 kg CO2/km)
+       ===================================================================== */
+    const IT = (n) => Math.round(n).toLocaleString('it-IT');
+
+    const PROFILES = [
+      {
+        id: 'imprese', name: 'Grandi Imprese & HR', short: 'Direzioni HR · CSR · AD', color: '#3b82f6',
+        tagline: 'Piano di welfare territoriale finanziato dal budget dell\'impresa, con piattaforma e pagina web di adesione incluse.',
+        reqs: [
+          'Sede o stabilimento con almeno 15 addetti serviti, o candidabili, da distributori automatici del promotore.',
+          'Piano welfare o budget di liberalità deducibile dal reddito d\'impresa (TUIR art. 51, comma 2).',
+          'Consenso alla consegna periodica dei panieri Km 0 agli addetti durante il normale turno di lavoro.'
+        ],
+        benefit: 'Piattaforma di erogazione e gestione dei voucher conforme alla normativa, senza alcun costo aggiuntivo. Ogni impresa partecipante è promossa con una pagina web dedicata che comunica la sua adesione.',
+        faqs: [
+          ['La piattaforma comporta canoni per l\'impresa?', 'No. Erogazione, gestione dei voucher e pagina web di adesione sono forniti senza costi aggiuntivi.'],
+          ['Qual è il trattamento fiscale dei voucher?', 'Soggiorno e food rientrano nei piani welfare deducibili; condizioni e limiti restano quelli previsti dal TUIR e vanno verificati con il consulente.'],
+          ['Che impatto ha sul rapporto di somministrazione?', 'Il benefit integrato aumenta il costo di sostituzione del fornitore: nel modello il churn scende dal 10% al 2%.'],
+          ['Serve un impegno di durata?', 'L\'adesione è modulata sul contratto di somministrazione in essere; i dettagli sono definiti in fase di convenzione.']
+        ],
+        calc: { title: 'Budget welfare e deducibilità', label: 'Addetti nella sede', unit: 'addetti', min: 15, max: 300, step: 5, def: 30,
+          fn: (v) => [
+            ['Budget voucher stimato', '€ ' + IT(v * (50 * 0.16 * 2 + 25 * 0.25 * 2))],
+            ['Costo piattaforma', '€ 0'],
+            ['Churn contratto vending', '10% → 2%'],
+            ['Pagina web di adesione', 'Inclusa']
+          ] }
+      },
+      {
+        id: 'addetti', name: 'Addetti delle Imprese Clienti', short: 'Personale beneficiario', color: '#22d3ee',
+        tagline: 'Voucher aziendali per soggiorno e food, biglietti omaggio e ordini Km 0 recapitati sul luogo di lavoro.',
+        reqs: [
+          'Essere in organico presso un\'impresa cliente convenzionata.',
+          'Registrazione gratuita con matricola o e-mail aziendale per l\'accredito dei voucher.',
+          'Ritiro dei panieri locali presso la sede, senza spese di trasporto a carico dell\'addetto.'
+        ],
+        benefit: 'Voucher soggiorno (€ 50) e food (€ 25) finanziati dall\'impresa, biglietto omaggio da € 25 coperto dal Matching Grant e Certificato di Partecipazione Welfare.',
+        faqs: [
+          ['I biglietti degli eventi sono davvero gratuiti?', 'Sì: il Matching Grant della Startup copre € 25 per ogni presenza diretta attivata dal voucher.'],
+          ['Come ricevo i panieri Km 0?', 'I furgoni tecnici li consegnano in sede durante i giri di rifornimento già programmati.'],
+          ['Posso partecipare con familiari?', 'Sì. Il modello considera in media 2,0 presenze per voucher, accompagnatori inclusi.']
+        ],
+        calc: { title: 'Benefit annuo stimato', label: 'Esperienze fruite / anno', unit: 'esperienze', min: 1, max: 6, step: 1, def: 2,
+          fn: (v) => [
+            ['Voucher soggiorno+food', '€ ' + IT(v * 75)],
+            ['Biglietti omaggio', '€ ' + IT(v * 25)],
+            ['Spesa Km 0 (6 ordini)', '€ ' + IT(6 * 30)],
+            ['Certificato Welfare', 'Incluso']
+          ] }
+      },
+      {
+        id: 'produttori', name: 'Produttori Agricoli Km 0', short: 'Filiera corta', color: '#10b981',
+        tagline: 'Nuovo mercato per Prodotti a Km 0: vendita diretta agli addetti, senza intermediari e senza costi di consegna.',
+        reqs: [
+          'Produzione o trasformazione agroalimentare entro un raggio territoriale di 50–70 km.',
+          'Conformità HACCP, tracciabilità di lotto e confezionamento in panieri standard (scontrino medio € 30).',
+          'Conferimento settimanale dei lotti ordinati presso l\'hub logistico del promotore.'
+        ],
+        benefit: 'Canale diretto verso la base di addetti delle imprese clienti. La consegna usa i giri di manutenzione già programmati: nessuna tratta dedicata, impatto ambientale azzerato per economie di scopo condivise.',
+        faqs: [
+          ['Chi sostiene i costi di consegna?', 'Nessun costo per il produttore: la consegna è integrata nei percorsi ordinari dei furgoni tecnici.'],
+          ['Chi stabilisce il prezzo del paniere?', 'Il produttore, a prezzo remunerativo: non c\'è la pressione di ribasso tipica della grande distribuzione.'],
+          ['Come si misura il beneficio ambientale?', 'Ogni ordine evita 50 km di trasporto dedicato (0,19 kg CO₂/km): dato utilizzabile per rendicontazione Scope 3 GHG.']
+        ],
+        calc: { title: 'Fatturato e km evitati', label: 'Panieri a settimana', unit: 'panieri', min: 5, max: 120, step: 5, def: 25,
+          fn: (v) => { const o = v * 48; return [
+            ['Fatturato diretto / anno', '€ ' + IT(o * 30)],
+            ['Km dedicati evitati', IT(o * 50) + ' km'],
+            ['CO₂ non emessa', IT(o * 50 * 0.19) + ' kg'],
+            ['Costi di consegna', '€ 0']
+          ]; } }
+      },
+      {
+        id: 'ospitalita', name: 'Hotel, Agriturismi & Ristoranti', short: 'Ricettività e food', color: '#f59e0b',
+        tagline: 'Presenze garantite da voucher a valore pieno, senza commissioni di intermediazione e con indotto accessorio.',
+        reqs: [
+          'Struttura ricettiva o pubblico esercizio operativo nel distretto territoriale degli eventi.',
+          'Accettazione dei voucher al valore nominale (soggiorno € 50, food € 25) con liquidazione telematica.',
+          'Disponibilità a riservare contingenti di camere o coperti concordati con il promotore.'
+        ],
+        benefit: 'Flusso diretto di ospiti dalle imprese convenzionate, concentrato in bassa stagione e giorni infrasettimanali, con moltiplicatore d\'indotto 2,5× sul valore del voucher.',
+        faqs: [
+          ['Quando vengono liquidati i voucher?', 'La liquidazione avviene per via telematica; la tempistica è definita nella convenzione (indicativamente entro 5 giorni lavorativi).'],
+          ['Gli accompagnatori pagano a parte?', 'Sì, a tariffa piena: nel modello ogni voucher genera in media 2,0 presenze.'],
+          ['C\'è una commissione sull\'incasso?', 'I voucher sono accreditati al valore concordato; il margine di piattaforma è regolato dalla convenzione con la Startup.']
+        ],
+        calc: { title: 'Incasso e indotto', label: 'Voucher accolti / mese', unit: 'voucher', min: 10, max: 200, step: 5, def: 30,
+          fn: (v) => { const a = v * 37.5 * 12; return [
+            ['Incasso voucher / anno', '€ ' + IT(a)],
+            ['Indotto accessorio 2,5×', '€ ' + IT(a * 2.5)],
+            ['Ospiti / anno', IT(v * 12 * 2)],
+            ['Intermediazione OTA', 'Non applicata']
+          ]; } }
+      },
+      {
+        id: 'cultura', name: 'Cultura, Spettacoli & Startup', short: 'Eventi e Matching Grant', color: '#a78bfa',
+        tagline: 'Matching Grant per biglietti omaggio, pubblico profilato e passaparola misurabile (K-Factor).',
+        reqs: [
+          'Organizzazione di spettacoli, concerti, rassegne o festival sul territorio.',
+          'Adesione alla convenzione Matching Grant per gli ingressi omaggio da € 25.',
+          'Condivisione dei dati di presenza aggregati per la misura dell\'impatto economico locale.'
+        ],
+        benefit: 'Fondo Matching Grant di € 56.250 a copertura di 2.250 biglietti omaggio, con accesso diretto ai vertici HR delle imprese tramite il promotore.',
+        faqs: [
+          ['Chi copre il valore dei biglietti omaggio?', 'La Startup, tramite il fondo Matching Grant: nessun onere per l\'operatore promotore.'],
+          ['Come entra l\'evento nel circuito?', 'Il promotore lo propone alle Direzioni HR come benefit dei piani welfare.'],
+          ['Che retention si assume?', 'Il modello usa il 40% di spettatori che ritornano all\'edizione successiva (parametro modificabile nel Simulatore).']
+        ],
+        calc: { title: 'Presenze e Matching Grant', label: 'Spettatori prima edizione', unit: 'spettatori', min: 200, max: 5000, step: 100, def: 1000,
+          fn: (v) => [
+            ['Fondo Matching Grant', '€ 56.250'],
+            ['Biglietti omaggio', '2.250'],
+            ['Ritorno ed. successiva (40%)', IT(v * 0.4) + ' pers.'],
+            ['Spesa locale (€ 50 / presenza)', '€ ' + IT(v * 50)]
+          ] }
+      }
+    ];
+
+    /* ===================================================================== */
+    /*  UI                                                                    */
+    /* ===================================================================== */
+    const $ = (s) => document.querySelector(s);
+    const tabsEl = $('#tabs'), leftEl = $('#leftPanel'), rightEl = $('#rightPanel');
+    let current = 0;
+    let onProfileChange = () => {};
+
+    const check = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+    function renderTabs() {
+      tabsEl.innerHTML = PROFILES.map((p, i) => `
+        <button type="button" class="tab ${i === current ? 'is-active' : ''}" role="tab" aria-selected="${i === current}" data-i="${i}" style="--c:${p.color}">
+          <span class="dot"></span><span style="min-width:0"><b>${p.name}</b><small>${p.short}</small></span>
+        </button>`).join('');
+      tabsEl.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => selectProfile(+b.dataset.i)));
+    }
+
+    function renderPanels() {
+      const p = PROFILES[current];
+      leftEl.innerHTML = `
+        <div class="section-title"><span>Requisiti di partecipazione</span><em>${p.short}</em></div>
+        <p class="tagline">${p.tagline}</p>
+        <ul class="reqs">${p.reqs.map((r) => `<li>${check}<span>${r}</span></li>`).join('')}</ul>
+        <div class="benefit"><strong>Vantaggio chiave</strong>${p.benefit}</div>
+        <div class="section-title"><span>Domande frequenti</span></div>
+        ${p.faqs.map((f, i) => `<details ${i === 0 ? 'open' : ''}><summary>${f[0]}</summary><p>${f[1]}</p></details>`).join('')}`;
+
+      const c = p.calc;
+      rightEl.innerHTML = `
+        <div class="calc">
+          <div class="calc-head"><span>${c.title}</span><b>Live</b></div>
+          <div class="slider-row">
+            <label for="slider"><span>${c.label}</span><strong id="sliderVal">${c.def} ${c.unit}</strong></label>
+            <input type="range" id="slider" min="${c.min}" max="${c.max}" step="${c.step}" value="${c.def}">
+          </div>
+          <div class="results" id="results"></div>
+        </div>
+        <div class="section-title"><span>Candidatura</span><em>Pre-adesione</em></div>
+        <form id="leadForm" novalidate>
+          <div class="field"><label for="fName">Ragione sociale o nominativo *</label><input id="fName" required autocomplete="organization"></div>
+          <div class="field"><label for="fMail">E-mail *</label><input id="fMail" type="email" required autocomplete="email"></div>
+          <div class="field"><label for="fTel">Telefono</label><input id="fTel" type="tel" autocomplete="tel"></div>
+          <div class="field"><label for="fNote">Note o esigenze operative</label><textarea id="fNote"></textarea></div>
+          <label class="consent"><input type="checkbox" id="fConsent" required><span>Acconsento al trattamento dei dati per la gestione della candidatura.</span></label>
+          <button class="submit" type="submit">Invia candidatura</button>
+        </form>`;
+      const slider = $('#slider');
+      const paint = () => {
+        $('#sliderVal').textContent = slider.value + ' ' + c.unit;
+        $('#results').innerHTML = c.fn(+slider.value).map((r) => `<div class="pill"><span>${r[0]}</span><strong>${r[1]}</strong></div>`).join('');
+      };
+      slider.addEventListener('input', paint); paint();
+      $('#leadForm').addEventListener('submit', onSubmit);
+    }
+
+    function onSubmit(e) {
+      e.preventDefault();
+      const name = $('#fName').value.trim(), mail = $('#fMail').value.trim();
+      if (!name || !/^\S+@\S+\.\S+$/.test(mail) || !$('#fConsent').checked) {
+        ($('#fName').value.trim() ? ($(/^\S+@\S+\.\S+$/.test(mail) ? '#fConsent' : '#fMail')) : $('#fName')).focus();
+        return;
+      }
+      const p = PROFILES[current];
+      try {
+        const k = 'welfareOnboardingLeads';
+        const all = JSON.parse(localStorage.getItem(k) || '[]');
+        all.push({ profile: p.id, name, mail, tel: $('#fTel').value, note: $('#fNote').value, at: new Date().toISOString() });
+        localStorage.setItem(k, JSON.stringify(all));
+      } catch (_) { /* storage non disponibile */ }
+      $('#modalText').textContent = name + ', la richiesta per il profilo "' + p.name + '" è stata registrata in questo browser. Un riferimento del promotore ti contatterà all\'indirizzo ' + mail + '.';
+      $('#modal').classList.add('is-open');
+      $('#modalClose').focus();
+    }
+    $('#modalClose').addEventListener('click', () => $('#modal').classList.remove('is-open'));
+
+    function applyAccent(p) {
+      const r = document.documentElement.style;
+      r.setProperty('--accent', p.color);
+      r.setProperty('--accent-soft', p.color + '38');
+      $('#roleName').textContent = p.name;
+    }
+
+    function selectProfile(i) {
+      current = i;
+      const p = PROFILES[i];
+      applyAccent(p); renderTabs(); renderPanels();
+      leftEl.scrollTop = 0;
+      onProfileChange(i);
+      history.replaceState(null, '', '?profile=' + p.id);
+    }
+
+    /* Navigazione */
+    $('#backCards').addEventListener('click', () => { location.href = 'landing-page-3d-vetro.html'; });
+    $('#backSim').addEventListener('click', () => {
+      if (window.parent && window.parent !== window) window.parent.postMessage({ action: 'GO_TO_SIMULATOR' }, '*');
+      else location.href = location.protocol.startsWith('http') ? '/' : '../index.html';
+    });
+
+    /* Profilo iniziale da querystring (impostato dalla card estratta dalla giostra) */
+    const qp = new URLSearchParams(location.search).get('profile');
+    const startIdx = Math.max(0, PROFILES.findIndex((p) => p.id === qp));
+    current = startIdx; applyAccent(PROFILES[current]); renderTabs(); renderPanels();
+
+    /* ===================================================================== */
+    /*  SCENA 3D                                                              */
+    /* ===================================================================== */
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let raf = 0, renderer;
+
+    function startScene() {
+      const canvas = $('#stage3d');
+      try {
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+      } catch (err) { document.body.classList.add('no-webgl'); finishIntro(); return; }
+
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
+
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x05070c, 0.035);
+      const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 80);
+
+      /* --- luci: key + rim colorate dal profilo --- */
+      scene.add(new THREE.HemisphereLight(0xbcd4ff, 0x080a12, 0.55));
+      const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(4, 7, 5); scene.add(key);
+      const rimA = new THREE.PointLight(0x3b82f6, 3.2, 16); rimA.position.set(-4.5, 2.4, -3); scene.add(rimA);
+      const rimB = new THREE.PointLight(0x3b82f6, 2.2, 14); rimB.position.set(4.5, 0.5, -2); scene.add(rimB);
+
+      /* --- texture morbide procedurali --- */
+      function softTexture(stops) {
+        const c = document.createElement('canvas'); c.width = c.height = 128;
+        const g = c.getContext('2d'); const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+        stops.forEach((s) => gr.addColorStop(s[0], s[1]));
+        g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+        const t = new THREE.CanvasTexture(c); return t;
+      }
+      const puffTex = softTexture([[0, 'rgba(255,255,255,0.9)'], [0.35, 'rgba(255,255,255,0.35)'], [1, 'rgba(255,255,255,0)']]);
+      const glowTex = softTexture([[0, 'rgba(255,255,255,0.85)'], [0.5, 'rgba(255,255,255,0.18)'], [1, 'rgba(255,255,255,0)']]);
+
+      /* --- geometria tazzina (profilo a rivoluzione + manico + piattino) --- */
+      const V2 = THREE.Vector2;
+      const cupProfile = [
+        [0.00, 0.00], [0.50, 0.00], [0.58, 0.04], [0.62, 0.12], [0.80, 0.55], [0.97, 1.05], [1.02, 1.22], [1.00, 1.25],
+        [0.94, 1.24], [0.90, 1.10], [0.72, 0.60], [0.56, 0.20], [0.00, 0.17]
+      ].map((p) => new V2(p[0], p[1]));
+      const saucerProfile = [[0, 0], [0.9, 0], [1.45, 0.07], [1.62, 0.16], [1.6, 0.19], [1.4, 0.12], [0.9, 0.08], [0, 0.08]].map((p) => new V2(p[0], p[1]));
+      const cupGeo = new THREE.LatheGeometry(cupProfile, 72);
+      const saucerGeo = new THREE.LatheGeometry(saucerProfile, 72);
+      const handleGeo = new THREE.TorusGeometry(0.36, 0.075, 18, 40, Math.PI * 1.2);
+
+      const coffeeMat = new THREE.ShaderMaterial({
+        uniforms: { uTime: { value: 0 }, uTint: { value: new THREE.Color('#3b82f6') } },
+        vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+        fragmentShader: [
+          'varying vec2 vUv; uniform float uTime; uniform vec3 uTint;',
+          'void main(){',
+          '  vec2 p = vUv - 0.5; float r = length(p) * 2.0; float a = atan(p.y, p.x);',
+          '  float swirl = sin(a * 3.0 + r * 9.0 - uTime * 0.9) * 0.5 + 0.5;',
+          '  float rings = sin(r * 22.0 - uTime * 1.4) * 0.5 + 0.5;',
+          '  vec3 dark = vec3(0.10, 0.05, 0.025); vec3 crema = vec3(0.62, 0.40, 0.20);',
+          '  vec3 col = mix(dark, crema, swirl * 0.55 + rings * 0.18);',
+          '  col = mix(col, uTint, smoothstep(0.78, 1.0, r) * 0.35);',
+          '  float edge = smoothstep(1.0, 0.94, r);',
+          '  gl_FragColor = vec4(col, edge);',
+          '}'
+        ].join('\n'),
+        transparent: true
+      });
+
+      function makeCup(colorHex, withCoffee) {
+        const g = new THREE.Group();
+        const mat = new THREE.MeshPhysicalMaterial({
+          color: new THREE.Color(colorHex), roughness: 0.22, metalness: 0.04,
+          clearcoat: 1, clearcoatRoughness: 0.08, side: THREE.DoubleSide,
+          emissive: new THREE.Color(colorHex), emissiveIntensity: 0.06
+        });
+        const cup = new THREE.Mesh(cupGeo, mat); g.add(cup);
+        const saucer = new THREE.Mesh(saucerGeo, mat); saucer.position.y = -0.08; g.add(saucer);
+        const handle = new THREE.Mesh(handleGeo, mat);
+        handle.position.set(0.93, 0.72, 0); handle.rotation.z = -Math.PI * 0.6; g.add(handle);
+        if (withCoffee) {
+          const coffee = new THREE.Mesh(new THREE.CircleGeometry(0.93, 64), coffeeMat);
+          coffee.rotation.x = -Math.PI / 2; coffee.position.y = 1.1; g.add(coffee);
+        }
+        g.userData.mat = mat;
+        return g;
+      }
+
+      /* --- tazzina eroe --- */
+      const hero = new THREE.Group();
+      const heroCup = makeCup(PROFILES[current].color, true);
+      hero.add(heroCup);
+      hero.scale.setScalar(0.95);
+      hero.position.y = -1.3;
+      scene.add(hero);
+
+      const floorGlow = new THREE.Mesh(new THREE.CircleGeometry(2.7, 64), new THREE.MeshBasicMaterial({
+        map: glowTex, color: PROFILES[current].color, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending
+      }));
+      floorGlow.rotation.x = -Math.PI / 2; floorGlow.position.y = -0.83; scene.add(floorGlow);
+
+      /* --- vapore volumetrico (sprite additivi, deriva a spirale) --- */
+      const STEAM = reduceMotion ? 16 : 46;
+      const steam = [];
+      for (let i = 0; i < STEAM; i++) {
+        const m = new THREE.SpriteMaterial({ map: puffTex, color: 0xdbeafe, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+        const s = new THREE.Sprite(m); s.userData = { t: Math.random(), speed: 0.12 + Math.random() * 0.14, ph: Math.random() * 6.28, rad: 0.12 + Math.random() * 0.4 };
+        scene.add(s); steam.push(s);
+      }
+
+      /* --- polvere luminosa ambientale --- */
+      const DUST = reduceMotion ? 120 : 520;
+      const dGeo = new THREE.BufferGeometry(); const dPos = new Float32Array(DUST * 3); const dSeed = new Float32Array(DUST);
+      for (let i = 0; i < DUST; i++) {
+        dPos[i * 3] = (Math.random() - 0.5) * 18; dPos[i * 3 + 1] = (Math.random() - 0.5) * 9; dPos[i * 3 + 2] = (Math.random() - 0.5) * 12 - 2; dSeed[i] = Math.random() * 6.28;
+      }
+      dGeo.setAttribute('position', new THREE.BufferAttribute(dPos, 3));
+      const dust = new THREE.Points(dGeo, new THREE.PointsMaterial({ map: glowTex, size: 0.09, color: 0x9ec5ff, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending }));
+      scene.add(dust);
+
+      /* --- selettore 3D: cinque tazzine, una per profilo --- */
+      const selector = new THREE.Group(); selector.position.set(0, -2.15, 1.0); scene.add(selector);
+      const minis = PROFILES.map((p, i) => {
+        const g = makeCup(p.color, false); g.scale.setScalar(0.28);
+        g.position.x = (i - 2) * 1.4;
+        g.traverse((o) => { if (o.isMesh) o.userData.idx = i; });
+        const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: p.color, transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending }));
+        halo.scale.set(1.1, 1.1, 1); halo.position.set(g.position.x, 0.2, -0.05);
+        selector.add(g); selector.add(halo); g.userData.halo = halo; g.userData.base = g.position.x;
+        return g;
+      });
+
+      /* --- interazione: trascinamento, hover/click sulle mini-tazzine, parallasse --- */
+      const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+      let dragging = false, lastX = 0, moved = 0, spin = 0.0, spinVel = 0.0045;
+      const pointer = { x: 0, y: 0 };
+
+      function pick(ev) {
+        ndc.set((ev.clientX / innerWidth) * 2 - 1, -(ev.clientY / innerHeight) * 2 + 1);
+        ray.setFromCamera(ndc, camera);
+        const hit = ray.intersectObjects(minis, true)[0];
+        return hit ? hit.object.userData.idx : -1;
+      }
+      canvas.addEventListener('pointerdown', (e) => { dragging = true; lastX = e.clientX; moved = 0; canvas.classList.add('is-dragging'); canvas.setPointerCapture(e.pointerId); });
+      canvas.addEventListener('pointermove', (e) => {
+        pointer.x = (e.clientX / innerWidth) * 2 - 1; pointer.y = (e.clientY / innerHeight) * 2 - 1;
+        if (dragging) { const dx = e.clientX - lastX; lastX = e.clientX; moved += Math.abs(dx); spin += dx * 0.012; spinVel = dx * 0.0009; }
+        else canvas.classList.toggle('is-hovering', pick(e) >= 0);
+      });
+      const endDrag = (e) => {
+        if (!dragging) return; dragging = false; canvas.classList.remove('is-dragging');
+        if (moved < 5) { const i = pick(e); if (i >= 0 && i !== current) selectProfile(i); }
+      };
+      canvas.addEventListener('pointerup', endDrag); canvas.addEventListener('pointercancel', endDrag);
+
+      /* --- cambio profilo: pirouette + morph cromatico --- */
+      const targetColor = new THREE.Color(PROFILES[current].color);
+      let pirouette = 0;
+      onProfileChange = (i) => {
+        targetColor.set(PROFILES[i].color);
+        pirouette = Math.PI * 2;
+        rimA.color.set(PROFILES[i].color); rimB.color.set(PROFILES[i].color);
+      };
+      rimA.color.set(PROFILES[current].color); rimB.color.set(PROFILES[current].color);
+
+      /* --- resize --- */
+      function resize() {
+        const w = innerWidth, h = innerHeight;
+        renderer.setSize(w, h, false); camera.aspect = w / h;
+        // inquadratura più alta su viewport verticali (layout mobile)
+        camera.position.z = w < 1100 ? 8.6 : 7.4; camera.updateProjectionMatrix();
+        hero.position.y = w < 1100 ? 0.0 : -0.75;
+        selector.position.y = w < 1100 ? -1.75 : -2.15;
+        selector.visible = w >= 700;
+      }
+      addEventListener('resize', resize); resize();
+
+      /* --- intro cinematografica: volo di camera lungo curva (stessa origine focale delle Card) --- */
+      const look0 = new THREE.Vector3(0, -0.6, 0);
+      const path = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, 0.6, 15), new THREE.Vector3(3.2, 4.2, 11), new THREE.Vector3(-1.4, 2.6, 8.8), new THREE.Vector3(0, 1.5, camera.position.z)
+      ]);
+      const INTRO = reduceMotion ? 0.01 : 2.6;
+      const clock = new THREE.Clock(); let introDone = false;
+      const ease = (t) => 1 - Math.pow(1 - t, 4);
+      const tmp = new THREE.Vector3(), look = look0;
+
+      function frame() {
+        raf = requestAnimationFrame(frame);
+        const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+
+        // camera: spline in ingresso, poi parallasse col puntatore
+        if (t < INTRO) {
+          path.getPoint(ease(t / INTRO), tmp); camera.position.copy(tmp);
+        } else {
+          if (!introDone) { introDone = true; finishIntro(); }
+          const tz = innerWidth < 1100 ? 8.6 : 7.4;
+          camera.position.x += (pointer.x * 0.7 - camera.position.x) * 0.04;
+          camera.position.y += (1.5 - pointer.y * 0.45 - camera.position.y) * 0.04;
+          camera.position.z += (tz - camera.position.z) * 0.06;
+        }
+        camera.lookAt(look);
+
+        // rotazione eroe con inerzia + pirouette di cambio profilo
+        if (!dragging) { spin += spinVel; spinVel += (0.0045 - spinVel) * 0.03; }
+        if (pirouette > 0) { const step = Math.min(pirouette, pirouette * 0.09 + 0.01); spin += step; pirouette -= step; }
+        hero.rotation.y = spin;
+        hero.position.y += (((innerWidth < 1100 ? 0.0 : -0.75) + Math.sin(t * 1.1) * 0.03) - hero.position.y) * 0.1;
+
+        // colore (morph) su tazza, sorgenti, alone, caffè
+        const mat = heroCup.userData.mat;
+        mat.color.lerp(targetColor, 0.08); mat.emissive.copy(mat.color);
+        floorGlow.material.color.lerp(targetColor, 0.08);
+        coffeeMat.uniforms.uTint.value.lerp(targetColor, 0.08); coffeeMat.uniforms.uTime.value = t;
+
+        // vapore: risale, si espande, si dissolve, vira nel colore del profilo
+        steam.forEach((s, i) => {
+          const u = s.userData; u.t += dt * u.speed; if (u.t > 1) { u.t -= 1; u.ph = Math.random() * 6.28; }
+          const k = u.t, a = u.ph + t * 0.9 + k * 4.0, r = u.rad * (0.4 + k * 1.3);
+          const base = hero.position.y + 1.2;
+          s.position.set(Math.cos(a) * r * 0.7, base + k * 2.3, Math.sin(a) * r * 0.7);
+          const sc = 0.4 + k * 1.5; s.scale.set(sc, sc, 1);
+          s.material.opacity = Math.sin(Math.PI * k) * 0.17;
+          s.material.color.copy(targetColor).lerp(new THREE.Color(0xe0f2fe), 0.65);
+        });
+
+        // polvere in deriva
+        const arr = dGeo.attributes.position.array;
+        for (let i = 0; i < DUST; i++) {
+          arr[i * 3 + 1] += Math.sin(t * 0.4 + dSeed[i]) * 0.0015 + 0.0012;
+          arr[i * 3] += Math.cos(t * 0.3 + dSeed[i]) * 0.0012;
+          if (arr[i * 3 + 1] > 4.6) arr[i * 3 + 1] = -4.6;
+        }
+        dGeo.attributes.position.needsUpdate = true; dust.rotation.y = t * 0.01;
+
+        // selettore: la tazzina attiva si solleva, ruota e si illumina
+        minis.forEach((m, i) => {
+          const on = i === current;
+          m.rotation.y += on ? 0.03 : 0.006;
+          const ty = on ? 0.12 + Math.sin(t * 2.2) * 0.03 : Math.sin(t * 1.3 + i) * 0.02;
+          m.position.y += (ty - m.position.y) * 0.12;
+          const ts = on ? 0.34 : 0.28; m.scale.setScalar(m.scale.x + (ts - m.scale.x) * 0.12);
+          m.userData.mat.emissiveIntensity += ((on ? 0.45 : 0.05) - m.userData.mat.emissiveIntensity) * 0.1;
+          m.userData.halo.material.opacity += ((on ? 0.75 : 0.18) - m.userData.halo.material.opacity) * 0.1;
+        });
+
+        renderer.render(scene, camera);
+      }
+      frame();
+
+      /* --- pulizia risorse al rilascio della pagina --- */
+      addEventListener('pagehide', () => {
+        cancelAnimationFrame(raf);
+        scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { if (m.map) m.map.dispose(); m.dispose(); }); });
+        renderer.dispose();
+      });
+    }
+
+    function finishIntro() {
+      $('#curtain').classList.add('is-gone');
+      document.body.classList.add('is-ready');
+    }
+
+    if (typeof THREE === 'undefined') { document.body.classList.add('no-webgl'); finishIntro(); } else { startScene(); }
+    // sicurezza: se per qualunque motivo l'intro non completa, mostra comunque l'interfaccia
+    setTimeout(finishIntro, 4500);
+  </script>
+</body>
+</html>
